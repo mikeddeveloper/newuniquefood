@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unique Food Fest · Green Revolution Nigeria</title>
+    <!-- AOS CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- Font Awesome 6 (free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Leaflet map CSS + JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        :root {
+            --dark-green: #0A3B2E;
+            --light-green: #B7D93E;
+            --yellow: #FFD700;
+            --cream: #FEFAE0;
+            --brown: #5E3A1C;
+            --sand: #FAF3DD;
+        }
+
+        body {
+            background-color: #f8f6e9;
+            color: #1e2a1e;
+            overflow-x: hidden;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* ========== NAVBAR with hamburger icon ========== */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 6%;
+            background: rgba(10, 59, 46, 0.96);
+            backdrop-filter: blur(8px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            border-bottom: 4px solid var(--light-green);
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: var(--yellow);
+            text-shadow: 3px 3px 0 #0a3b2e;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+            align-items: center;
+            transition: all 0.4s ease;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: white;
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: 0.25s;
+            padding: 0.5rem 0.2rem;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-links a:hover {
+            border-bottom-color: var(--yellow);
+            color: var(--light-green);
+        }
+
+        .nav-support {
+            background: var(--yellow);
+            color: #0A3B2E !important;
+            padding: 0.6rem 1.8rem !important;
+            border-radius: 40px;
+            font-weight: 700;
+            border: 2px solid white;
+        }
+        .nav-support:hover {
+            background: #ffe552;
+            border-bottom-color: transparent !important;
+        }
+
+        /* hamburger icon */
+        .hamburger {
+            display: none;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            transition: 0.2s;
+        }
+        .hamburger:hover {
+            color: var(--yellow);
+        }
+
+        /* mobile nav */
+        @media (max-width: 1000px) {
+            .hamburger {
+                display: block;
+            }
+            .nav-links {
+                position: fixed;
+                top: 80px;
+                left: -100%;
+                width: 280px;
+                height: 100vh;
+                background: rgba(10, 59, 46, 0.98);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+                padding: 3rem 1.5rem;
+                gap: 1.8rem;
+                align-items: flex-start;
+                transition: 0.4s ease-in-out;
+                border-right: 6px solid var(--light-green);
+                z-index: 999;
+            }
+            .nav-links.active {
+                left: 0;
+            }
+            .nav-links li {
+                width: 100%;
+            }
+            .nav-links a {
+                font-size: 1.3rem;
+                display: block;
+                padding: 0.7rem;
+            }
+        }
+
+        /* ========== HERO with FLOATING DISH IMAGES ========== */
+        .hero {
+            position: relative;
+            background: linear-gradient(rgba(10,59,46,0.65), rgba(10,59,46,0.8)), url('https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?q=80&w=2070&auto=format&fit=crop'); 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            padding: 2rem 5%;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .floating-dishes {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .dish-img {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 6px solid rgba(255, 215, 0, 0.7);
+            box-shadow: 0 20px 30px rgba(0,0,0,0.4);
+            animation: floatDish 16s infinite alternate ease-in-out;
+            background: white;
+        }
+
+        .dish1 { top: 8%; left: 3%; width: 120px; height: 120px; animation-delay: 0s; }
+        .dish2 { top: 15%; right: 7%; width: 100px; height: 100px; animation-delay: 2s; }
+        .dish3 { bottom: 12%; left: 10%; width: 130px; height: 130px; animation-delay: 0.8s; }
+        .dish4 { bottom: 25%; right: 12%; width: 115px; height: 115px; animation-delay: 3s; }
+        .dish5 { top: 45%; left: 18%; width: 105px; height: 105px; animation-delay: 1.3s; }
+        .dish6 { top: 70%; right: 20%; width: 125px; height: 125px; animation-delay: 2.5s; }
+
+        @keyframes floatDish {
+            0% { transform: translateY(0px) rotate(0deg); }
+            100% { transform: translateY(-35px) rotate(8deg); }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 5;
+            max-width: 1000px;
+            background: rgba(10, 59, 46, 0.55);
+            backdrop-filter: blur(5px);
+            padding: 3.5rem 4rem;
+            border-radius: 100px 20px 100px 20px;
+            border: 4px solid var(--light-green);
+            box-shadow: 0 30px 45px rgba(0,0,0,0.4);
+            animation: glowPulse 3s infinite alternate;
+        }
+        @keyframes glowPulse {
+            from { box-shadow: 0 0 15px var(--light-green); }
+            to { box-shadow: 0 0 35px var(--yellow); }
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1.2;
+            text-shadow: 8px 8px 0 #0a3b2e;
+            color: var(--yellow);
+        }
+        /* ----- SECTION – seamless integration ----- */
+    #register.section {
+      width: 100%;
+      max-width: 780px;
+      margin: 0 auto;
+      background: transparent;
+    }
+
+    /* ----- SECTION TITLE – sophisticated badge + headline ----- */
+    .section-title {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1.1;
+      color: #fcf9e6;        /* warm light yellow */
+      margin-bottom: 2rem;
+      text-align: center;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.7rem 1.4rem;
+      text-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      letter-spacing: -0.02em;
+    }
+
+    .section-title span {
+      background: #fcf0b6;     /* soft butter */
+      color: #0a2b0a;
+      font-size: 1.1rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3em;
+      padding: 0.6rem 1.6rem;
+      border-radius: 60px;
+      box-shadow: 0 10px 0 #0c1f0c, 0 12px 28px rgba(0,0,0,0.4);
+      border: 1px solid #fef7d2;
+    }
+
+    /* ----- FORM WRAPPER – glassy light yellow with green aura ----- */
+    .form-wrapper {
+      background: rgba(254, 249, 224, 0.88);   /* light yellow with translucency */
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-radius: 64px;
+      padding: 3.2rem 3rem;
+      box-shadow: 
+        0 30px 40px -20px rgba(0,0,0,0.65),
+        0 0 0 2px rgba(60, 100, 40, 0.25),
+        inset 0 2px 4px rgba(255,255,220,0.8);
+      border: 1px solid rgba(180, 210, 140, 0.6);
+      transition: all 0.25s ease;
+    }
+
+    .form-wrapper:hover {
+      background: rgba(255, 251, 235, 0.92);
+      box-shadow: 0 35px 50px -20px #00000080, 0 0 0 3px #a5c88255;
+    }
+
+    /* ----- FORM – refined spacing ----- */
+    #festivalForm {
+      display: flex;
+      flex-direction: column;
+      gap: 1.6rem;
+    }
+
+    /* ----- FORM GROUP – modern, airy ----- */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    /* LABELS – dark green with icon personality */
+    .form-group label {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #173317;
+      letter-spacing: -0.3px;
+      padding-left: 0.3rem;
+    }
+
+    .form-group label i {
+      color: #2a672a;        /* vibrant green */
+      font-size: 1.3rem;
+      width: 1.8rem;
+      text-shadow: 0 2px 4px rgba(0,60,0,0.1);
+    }
+
+    /* ----- INPUTS + SELECT – premium minimalism ----- */
+    .form-control,
+    .select-category {
+      width: 100%;
+      padding: 1.2rem 1.8rem;
+      font-size: 1.1rem;
+      background: #fffff2;    /* very light yellow cream */
+      border: 2px solid #204d20;
+      border-radius: 100px;
+      outline: none;
+      color: #142010;
+      font-weight: 470;
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1);
+      box-shadow: inset 0 1px 6px rgba(30, 50, 10, 0.06);
+    }
+
+    .form-control:focus,
+    .select-category:focus {
+      border-color: #3a753a;
+      background: white;
+      box-shadow: 0 0 0 6px rgba(170, 220, 120, 0.2), inset 0 2px 8px #cfe0b0;
+      transform: scale(1.01);
+    }
+
+    .form-control::placeholder {
+      color: #586f58;
+      font-style: italic;
+      font-weight: 350;
+      letter-spacing: -0.2px;
+    }
+
+    /* custom select arrow – refined */
+    .select-category {
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="%231e4a1e"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 1.8rem center;
+      background-size: 1.8rem;
+      padding-right: 4.5rem;
+      cursor: pointer;
+    }
+
+    .select-category option {
+      background: #fcf7df;
+      color: #183218;
+      font-weight: 500;
+      padding: 1rem;
+    }
+
+    /* ----- BUTTON – masterpiece: dark green & light yellow interplay ----- */
+    .btn {
+      background: linear-gradient(145deg, #194a19, #0f320f);
+      color: #fffbdf;
+      border: none;
+      padding: 1.5rem 1.8rem;
+      font-size: 1.45rem;
+      font-weight: 700;
+      border-radius: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.1rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      border: 2px solid #fbffb0;
+      box-shadow: 0 18px 0 #0a1e0a, 0 12px 30px #00000050;
+      transition: all 0.1s cubic-bezier(0.22, 1, 0.36, 1);
+      cursor: pointer;
+      margin-top: 0.6rem;
+    }
+
+    .btn i {
+      font-size: 1.7rem;
+      color: #faf7cf;
+      filter: drop-shadow(0 2px 2px black);
+      transition: transform 0.2s;
+    }
+
+    .btn:hover {
+      background: #256a25;
+      border-color: #fffdcd;
+      transform: translateY(6px);
+      box-shadow: 0 12px 0 #0a1e0a, 0 20px 30px #00000060;
+    }
+
+    .btn:hover i {
+      transform: translateX(6px);
+    }
+
+    .btn:active {
+      transform: translateY(14px);
+      box-shadow: 0 6px 0 #0a1e0a, 0 20px 30px #00000060;
+    }
+
+    /* ----- WHATSAPP BLOCK – luxurious green with golden accent ----- */
+    .whatsapp-link {
+      margin-top: 2.4rem;
+      background: linear-gradient(105deg, #1d4f1d, #0f3a0f);
+      border-radius: 80px;
+      padding: 0.35rem;
+      border: 2.5px solid #fcf0a0;
+      box-shadow: 0 14px 0 #071307, 0 16px 30px #00000055;
+      transition: 0.15s;
+      display: none;   /* shown on submit */
+    }
+
+    .whatsapp-link a {
+      background: rgba(252, 250, 200, 0.1);
+      backdrop-filter: blur(4px);
+      border-radius: 80px;
+      padding: 1.2rem 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1.3rem;
+      color: #fffbdf;
+      text-decoration: none;
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      transition: 0.15s;
+      border: 1px solid #fdffc4;
+    }
+
+    .whatsapp-link a i {
+      font-size: 2.2rem;
+      color: #ffffff;
+      filter: drop-shadow(0 4px 4px #00000050);
+    }
+
+    .whatsapp-link:hover {
+      background: #2b6b2b;
+      border-color: #fffad6;
+      transform: scale(1.01);
+    }
+
+    .whatsapp-link:hover a {
+      background: rgba(255, 255, 220, 0.15);
+    }
+
+    /* ----- micro-animations, AOS tweaks ----- */
+    [data-aos="flip-up"] {
+      transform-style: preserve-3d;
+    }
+
+    /* responsive luxury */
+    @media (max-width: 550px) {
+      .form-wrapper {
+        padding: 2.2rem 1.8rem;
+        border-radius: 48px;
+      }
+      .section-title {
+        font-size: 2.2rem;
+      }
+      .btn {
+        font-size: 1.2rem;
+        padding: 1.2rem 1.2rem;
+      }
+      .whatsapp-link a {
+        font-size: 1.2rem;
+        padding: 1rem;
+      }
+    }
+
+    /* accent glow for dark green aesthetic */
+    .form-group:focus-within label {
+      color: #0d3e0d;
+      font-weight: 650;
+    }
+
+    /* extra organic touch: subtle pattern */
+    .form-wrapper {
+      background-image: radial-gradient(circle at 0% 30%, rgba(190, 220, 130, 0.1) 0%, transparent 40%);
+    }
+
+    /* small detail – category select */
+    .select-category option:checked {
+      background: #d4e6b5;
+      color: #0f2b0f;
+    }
+
+    /* floating icon pulse */
+    .fa-paper-plane {
+      animation: subtleFloat 2s infinite ease-in-out;
+    }
+
+    @keyframes subtleFloat {
+      0%, 100% { transform: translateX(0); }
+      50% { transform: translateX(4px) translateY(-2px); }
+    }
+
+    /* register section overall refinement */
+    .section-title span {
+      background: linear-gradient(145deg, #ffe28c, #fbeba0);
+      border: 1px solid #ffffffa0;
+    }
+  
+  
+
+ 
+
+
+
+        .hero h1 span { color: white; text-shadow: none; }
+
+        /* rest styles unchanged but enhanced AOS */
+        .section { padding: 5rem 6%; }
+        .section-title { font-size: 2.8rem; font-weight: 700; color: var(--dark-green); position: relative; margin-bottom: 2.8rem; text-align: center; }
+        .section-title span { background: var(--light-green); padding: 0.3rem 1.2rem; border-radius: 100px; color: #0A3B2E; font-size: 1.3rem; display: inline-block; margin-bottom: 0.8rem; font-weight: 700; }
+
+        .fest-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2.2rem; margin-top: 2rem; }
+        .fest-card { background: white; border-radius: 50px 20px 50px 20px; padding: 2.2rem 1.8rem; box-shadow: 0 20px 30px rgba(0,0,0,0.05); transition: 0.4s; border-bottom: 8px solid var(--light-green); text-align: center; }
+        .fest-card:hover { transform: translateY(-18px) scale(1.02); box-shadow: 0 40px 50px rgba(183,217,62,0.35); }
+        .fest-icon { font-size: 3.2rem; color: var(--dark-green); background: var(--yellow); width: 100px; height: 100px; line-height: 100px; border-radius: 30px; margin: 0 auto 1.2rem; }
+        .price-free { background: var(--light-green); padding: 0.5rem 1.3rem; border-radius: 40px; font-weight: 800; color: #0A3B2E; display: inline-block; margin-top: 0.8rem; font-size: 1.3rem; }
+
+        .obj-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 2rem; }
+        .obj-item { background: var(--dark-green); color: white; padding: 2.3rem 1.8rem; border-radius: 40px 10px 40px 10px; border-right: 10px solid var(--yellow); border-bottom: 10px solid var(--light-green); transition: 0.3s; }
+        .obj-item:hover { transform: scale(1.02); background: #155a46; }
+        .target-badge { background: white; padding: 1.2rem 1.8rem; border-radius: 100px; font-weight: 700; color: var(--dark-green); display: inline-block; margin: 0.5rem; border: 3px solid var(--dark-green); font-size: 1.2rem; transition: 0.2s; }
+        .target-badge:hover { background: var(--dark-green); color: white; border-color: var(--yellow); }
+
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 2.5rem; margin-top: 2rem; }
+        .team-member { background: white; border-radius: 50px 20px; padding: 2rem 1rem; text-align: center; box-shadow: 0 15px 25px rgba(0,0,0,0.05); border: 6px solid var(--light-green); transition: 0.3s; }
+        .team-member:hover { transform: translateY(-12px) scale(1.02); border-color: var(--yellow); }
+        .team-member img { width: 140px; height: 140px; border-radius: 50%; object-fit: cover; border: 6px solid var(--yellow); margin-bottom: 1rem; }
+
+        .form-wrapper { background: linear-gradient(145deg, #f3f9d2, #e6edc0); padding: 3rem; border-radius: 70px 20px 70px 20px; border: 6px solid var(--dark-green); max-width: 750px; margin: 0 auto; }
+        .btn { background: var(--dark-green); color: white; font-weight: 800; padding: 1.2rem 2rem; font-size: 1.5rem; border: none; border-radius: 60px; width: 100%; cursor: pointer; border: 4px solid var(--yellow); transition: 0.2s; }
+        .btn:hover { background: #1b6e55; border-color: white; transform: scale(1.02); }
+
+        .gallery-home { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.8rem; }
+        .gallery-item { border-radius: 50px 10px 50px 10px; overflow: hidden; aspect-ratio: 1 / 0.9; border: 8px solid white; transition: 0.5s; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
+        .gallery-item:hover img { transform: scale(1.15); }
+        .view-more-btn { background: var(--dark-green); color: var(--yellow); padding: 1.2rem 3rem; border-radius: 60px; font-weight: 800; font-size: 1.4rem; border: 4px solid var(--yellow); display: inline-block; margin-top: 2rem; transition: 0.3s; }
+        .view-more-btn:hover { background: #0f4f3d; color: white; transform: scale(1.05); }
+
+        .direction-card { background: var(--dark-green); padding: 2rem; border-radius: 60px; color: white; margin-bottom: 2rem; border-left: 15px solid var(--yellow); }
+        #map { height: 380px; border-radius: 60px 20px; border: 8px solid white; box-shadow: 0 20px 30px rgba(0,0,0,0.2); }
+
+        .social-links { display: flex; gap: 1.8rem; justify-content: center; margin-top: 1.8rem; }
+        .social-icon { background: var(--yellow); color: var(--dark-green); width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.3rem; border: 4px solid white; transition: 0.3s; }
+        .social-icon:hover { background: white; color: var(--dark-green); border-color: var(--yellow); transform: rotate(8deg) scale(1.1); }
+
+        .footer { background: var(--dark-green); color: white; padding: 2.5rem 6%; border-top: 8px solid var(--light-green); }
+        .gallery-page { padding: 3rem 6%; background: #f7f5dd; display: none; }
+        .full-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1.8rem; }
+
+        @media (max-width: 900px) {
+            .hero h1 { font-size: 3rem; }
+            .hero-content { padding: 2rem; }
+            .dish-img { width: 80px; height: 80px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========== NAVBAR with hamburger icon ========== -->
+    <nav class="navbar">
+        <div class="logo" data-aos="fade-right" data-aos-duration="1000"><i class="fas fa-seedling" style="color: #B7D93E;"></i> UNIQUE FOOD FEST</div>
+        <button class="hamburger" id="hamburgerBtn" aria-label="menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <ul class="nav-links" id="navLinks">
+            <li data-aos="fade-down" data-aos-delay="50"><a href="#home">Home</a></li>
+            <li data-aos="fade-down" data-aos-delay="100"><a href="#about">About</a></li>
+            <li data-aos="fade-down" data-aos-delay="150"><a href="#objectives">Objectives</a></li>
+            <li data-aos="fade-down" data-aos-delay="200"><a href="#target">Audience</a></li>
+            <li data-aos="fade-down" data-aos-delay="250"><a href="#festivals">Competitions</a></li>
+            <li data-aos="fade-down" data-aos-delay="300"><a href="#gallery-home">Gallery</a></li>
+            <li data-aos="fade-down" data-aos-delay="350"><a href="#team">Team</a></li>
+            <li data-aos="fade-down" data-aos-delay="400"><a href="#support" class="nav-support"><i class="fas fa-heart"></i> Support</a></li>
+        </ul>
+    </nav>
+
+    <!-- ========== HERO with FLOATING DISH IMAGES ========== -->
+    <section id="home" class="hero">
+        <div class="floating-dishes">
+            <img src="https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?q=80&w=2070&auto=format&fit=crop" alt="Jollof Rice" class="dish-img dish1" data-aos="fade-down-left" data-aos-delay="100" data-aos-duration="1200">
+            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=1964&auto=format&fit=crop" alt="Pounded Yam" class="dish-img dish2" data-aos="fade-down-right" data-aos-delay="300" data-aos-duration="1300">
+            <img src="https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?q=80&w=2070&auto=format&fit=crop" alt="Egusi Soup" class="dish-img dish3" data-aos="fade-up-left" data-aos-delay="200" data-aos-duration="1400">
+            <img src="https://plus.unsplash.com/premium_photo-1664475456112-39f3d995a3a9?q=80&w=2070&auto=format&fit=crop" alt="Suya" class="dish-img dish4" data-aos="fade-up-right" data-aos-delay="400" data-aos-duration="1100">
+            <img src="https://images.unsplash.com/photo-1589301762554-ba7e7b07c89d?q=80&w=2070&auto=format&fit=crop" alt="Ofada Stew" class="dish-img dish5" data-aos="fade-left" data-aos-delay="250" data-aos-duration="1350">
+            <img src="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?q=80&w=1974&auto=format&fit=crop" alt="Akara" class="dish-img dish6" data-aos="fade-right" data-aos-delay="350" data-aos-duration="1250">
+        </div>
+        <div class="hero-content" data-aos="zoom-in" data-aos-duration="1600" data-aos-delay="300">
+            <h1><span>UNIQUE</span> FOOD FEST</h1>
+            <p style="font-size:2.2rem; color: var(--yellow); font-weight:800; text-shadow:2px 2px 0 #0a3b2e;" data-aos="fade-up" data-aos-delay="600">#ChampioningGreenRevolution</p>
+            <p data-aos="fade-up" data-aos-delay="750"><i class="fas fa-leaf" style="color: #B7D93E;"></i> Agricultural value chain · Nigeria · FREE entry</p>
+            <p style="font-size: 1.5rem; background: var(--dark-green); padding: 0.8rem 2.2rem; border-radius: 60px; display: inline-block; margin-top: 0.8rem;" data-aos="flip-up" data-aos-delay="900"><i class="fas fa-location-dot"></i> Adeyemi Bero, Auditorium Alausa Ikeja</p>
+        </div>
+    </section>
+
+    <!-- ========== ABOUT US ========== -->
+    <section id="about" class="section" style="background: #fffaf0;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1200"><span>Our story</span>About Unique Food Festival</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 3rem; align-items: center;">
+            <div style="flex:1; min-width: 280px;" data-aos="fade-right" data-aos-delay="150" data-aos-duration="1300">
+                <h2 style="font-size: 2.5rem; color: var(--dark-green);">Celebrating Nigeria's <span style="background: var(--light-green); padding: 0.3rem 1.2rem;">green heritage</span></h2>
+                <p style="font-size: 1.25rem; line-height: 1.6; margin: 1.5rem 0; color: #2c4a2c;">Unique Food Fest is the first zero-fee festival dedicated to the Nigerian agricultural green revolution. We connect farmers, chefs, students, and families through food competitions, music, and exhibitions — all while championing local value chains from cassava to chilli. <strong>No payment. All passion.</strong></p>
+            </div>
+            <div style="flex:1; min-width: 280px; background: url('https://images.unsplash.com/photo-1528505086635-4c69d5f10908?q=80&w=2070&auto=format&fit=crop') center/cover; border-radius: 80px 20px; height: 340px; border: 10px solid var(--yellow);" data-aos="fade-left" data-aos-delay="200" data-aos-duration="1400"></div>
+        </div>
+    </section>
+
+    <!-- ========== OBJECTIVES ========== -->
+    <section id="objectives" class="section" style="background: var(--sand);">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1100"><span>Our mission</span>Festival objectives</div>
+        <div class="obj-grid">
+            <div class="obj-item" data-aos="flip-left" data-aos-delay="50" data-aos-duration="1000"><i class="fas fa-tractor"></i><h3>Champion farmers</h3><p style="font-size:1.1rem;">Elevate smallholder farmers & indigenous crops through visibility.</p></div>
+            <div class="obj-item" data-aos="flip-left" data-aos-delay="150" data-aos-duration="1100"><i class="fas fa-utensils"></i><h3>Zero waste cooking</h3><p style="font-size:1.1rem;">Promote sustainable recipes using traditional value chains.</p></div>
+            <div class="obj-item" data-aos="flip-left" data-aos-delay="250" data-aos-duration="1200"><i class="fas fa-graduation-cap"></i><h3>Youth education</h3><p style="font-size:1.1rem;">Hands-on quiz & exhibition for students on agri-food systems.</p></div>
+            <div class="obj-item" data-aos="flip-left" data-aos-delay="350" data-aos-duration="1300"><i class="fas fa-camera"></i><h3>Visual storytelling</h3><p style="font-size:1.1rem;">Photography comp to document Nigeria's green revolution.</p></div>
+        </div>
+    </section>
+
+    <!-- ========== TARGET AUDIENCE ========== -->
+    <section id="target" class="section" style="background: #f0f4d9;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1200"><span>who should attend</span>Target audience</div>
+        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 1.5rem; max-width: 1000px; margin: 0 auto;" data-aos="zoom-in" data-aos-delay="100">
+            <span class="target-badge" data-aos="flip-up" data-aos-delay="50"><i class="fas fa-seedling"></i> Farmers & cooperatives</span>
+            <span class="target-badge" data-aos="flip-up" data-aos-delay="100"><i class="fas fa-chef-hat"></i> Chefs & foodpreneurs</span>
+            <span class="target-badge" data-aos="flip-up" data-aos-delay="150"><i class="fas fa-camera-retro"></i> Photographers</span>
+            <span class="target-badge" data-aos="flip-up" data-aos-delay="200"><i class="fas fa-music"></i> Musicians</span>
+            <span class="target-badge" data-aos="flip-up" data-aos-delay="250"><i class="fas fa-flask"></i> Students (primary to uni)</span>
+            <span class="target-badge" data-aos="flip-up" data-aos-delay="300"><i class="fas fa-people-arrows"></i> Families & food lovers</span>
+            <span class="target-badge" data-aos="flip-up" data-aos-delay="350"><i class="fas fa-industry"></i> Agri-processors</span>
+            <span class="target-badge" data-aos="flip-up" data-aos-delay="400"><i class="fas fa-newspaper"></i> Media & storytellers</span>
+        </div>
+    </section>
+
+    <!-- ========== COMPETITIONS ========== -->
+    <section id="festivals" class="section" style="background: #fefae0;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1100"><span>taste our tribe</span>Competitions & activities</div>
+        <div class="fest-grid">
+            <div class="fest-card" data-aos="flip-up" data-aos-delay="0"><div class="fest-icon"><i class="fas fa-camera"></i></div><h3>Photography</h3><p>Capture green revolution & value chain.</p><span class="price-free">FREE</span></div>
+            <div class="fest-card" data-aos="flip-up" data-aos-delay="80"><div class="fest-icon"><i class="fas fa-music"></i></div><h3>Music</h3><p>Perform farm-to-stage. Afrobeat, folk.</p><span class="price-free">FREE</span></div>
+            <div class="fest-card" data-aos="flip-up" data-aos-delay="160"><div class="fest-icon"><i class="fas fa-utensil-spoon"></i></div><h3>Taste Our Tribe</h3><p>Cooking comp: heirloom crops.</p><span class="price-free">FREE</span></div>
+            <div class="fest-card" data-aos="flip-up" data-aos-delay="240"><div class="fest-icon"><i class="fas fa-ticket-alt"></i></div><h3>Raffle Draw</h3><p>Win farm tools, green vouchers.</p><span class="price-free">FREE</span></div>
+            <div class="fest-card" data-aos="flip-up" data-aos-delay="320"><div class="fest-icon"><i class="fas fa-flask"></i></div><h3>Cooking Quiz</h3><p>Student exhibition.</p><span class="price-free">STUDENT FREE</span></div>
+        </div>
+    </section>
+
+    <!-- ========== GALLERY HOMEPAGE ========== -->
+    <section id="gallery-home" class="section" style="background: #ffffff;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1200"><span>harvest in frames</span>Festival gallery</div>
+        <div class="gallery-home">
+            <div class="gallery-item" data-aos="zoom-in" data-aos-delay="80"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=1964&auto=format&fit=crop" alt="jollof rice"></div>
+            <div class="gallery-item" data-aos="zoom-in" data-aos-delay="160"><img src="https://images.unsplash.com/photo-1604329760661-e71dc83f8f26?q=80&w=2070&auto=format&fit=crop" alt="Nigerian yam"></div>
+            <div class="gallery-item" data-aos="zoom-in" data-aos-delay="240"><img src="https://images.unsplash.com/photo-1536304993881-ff6e9eefa2a6?q=80&w=2070&auto=format&fit=crop" alt="vegetables"></div>
+            <div class="gallery-item" data-aos="zoom-in" data-aos-delay="320"><img src="https://plus.unsplash.com/premium_photo-1664475456112-39f3d995a3a9?q=80&w=2070&auto=format&fit=crop" alt="local dishes"></div>
+        </div>
+        <div style="text-align: center;">
+            <a href="#" id="viewMoreBtn" class="view-more-btn" data-aos="fade-up" data-aos-delay="400"><i class="fas fa-images"></i> View more in gallery <i class="fas fa-arrow-right"></i></a>
+        </div>
+    </section>
+
+    <!-- ========== TEAM MEMBERS ========== -->
+    <section id="team" class="section" style="background: #eaf0ce;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1300"><span>the minds behind</span>Meet our team</div>
+        <div class="team-grid">
+            <div class="team-member" data-aos="fade-right" data-aos-delay="50" data-aos-duration="1100"><img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1974&auto=format&fit=crop" alt="Chidi"><h4>Chidi Nwosu</h4><p>Founder</p><div><i class="fab fa-twitter" style="color:var(--dark-green);"></i><i class="fab fa-linkedin" style="color:var(--dark-green); margin-left:0.7rem;"></i></div></div>
+            <div class="team-member" data-aos="fade-up" data-aos-delay="100" data-aos-duration="1200"><img src="https://images.unsplash.com/photo-1580894732444-8ecded7900cd?q=80&w=2070&auto=format&fit=crop" alt="Aisha"><h4>Aisha Bello</h4><p>Head of Operations</p><div><i class="fab fa-twitter"></i><i class="fab fa-instagram" style="margin-left:0.7rem;"></i></div></div>
+            <div class="team-member" data-aos="fade-up" data-aos-delay="150" data-aos-duration="1300"><img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?q=80&w=1974&auto=format&fit=crop" alt="Tunde"><h4>Tunde Adebayo</h4><p>Creative Director</p><div><i class="fab fa-instagram"></i><i class="fab fa-behance" style="margin-left:0.7rem;"></i></div></div>
+            <div class="team-member" data-aos="fade-left" data-aos-delay="200" data-aos-duration="1400"><img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e?q=80&w=2070&auto=format&fit=crop" alt="Nkechi"><h4>Nkechi Okonkwo</h4><p>Community & Partnerships</p><div><i class="fab fa-linkedin"></i><i class="fab fa-twitter" style="margin-left:0.7rem;"></i></div></div>
+        </div>
+    </section>
+
+    <!-- ========== REGISTRATION FORM ========== -->
+    <section id="register" class="section" style="background: #e5f0cf;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1100"><span>join the movement</span>Register for competitions</div>
+        <div class="form-wrapper" data-aos="flip-up" data-aos-delay="150" data-aos-duration="1500">
+            <form id="festivalForm">
+                <div class="form-group" style="margin-bottom:1.5rem;"><label style="font-size:1.3rem;"><i class="fas fa-user"></i> Full name</label><input type="text" class="form-control" id="name" placeholder="e.g. Amara Okafor" required></div>
+                <div class="form-group" style="margin-bottom:1.5rem;"><label style="font-size:1.3rem;"><i class="fas fa-phone-alt"></i> Phone number (WhatsApp)</label><input type="tel" class="form-control" id="phone" placeholder="+234 801 234 5678" required></div>
+                <div class="form-group" style="margin-bottom:2rem;"><label style="font-size:1.3rem;"><i class="fas fa-trophy"></i> Select category</label>
+                    <select class="select-category" id="category">
+                        <option>Photography competition</option>
+                        <option>Music performance</option>
+                        <option>Taste Our Tribe cooking comp</option>
+                        <option>Raffle draw</option>
+                        <option>Exhibition cooking quiz (student)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn"><i class="fas fa-paper-plane"></i> submit registration</button>
+                <div id="whatsappBlock" class="whatsapp-link" style="margin-top:2rem; background:#25D366; padding:1.2rem; border-radius:60px; display:none;">
+                    <a href="#" id="whatsappLink" target="_blank" style="color:white; text-decoration:none; display:flex; align-items:center; justify-content:center; gap:1rem; font-size:1.6rem;"><i class="fab fa-whatsapp"></i> Join official WhatsApp group</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- ========== SHOW SUPPORT ========== -->
+    <section id="support" class="section" style="background: #ffe28c;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1200"><span><i class="fas fa-hand-holding-heart"></i> show support</span>Back the green revolution</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 3rem; justify-content: center;">
+            <div style="background: var(--dark-green); color: white; padding: 2.8rem; border-radius: 80px 20px; max-width: 550px;" data-aos="fade-right" data-aos-delay="100">
+                <h2 style="color: var(--yellow); font-size: 2.2rem;">Support local farmers</h2>
+                <p style="margin: 1.8rem 0; font-size: 1.3rem;">Donate farm tools, sponsor a student, or volunteer. Every seed counts.</p>
+                <span style="background: var(--light-green); padding: 0.8rem 2.5rem; border-radius: 50px; color: #0A3B2E; font-weight: 800; font-size:1.3rem;">#GrowWithNigeria</span>
+            </div>
+            <div style="background: white; padding: 2.5rem; border-radius: 30px 80px; border: 6px solid var(--dark-green);" data-aos="fade-left" data-aos-delay="200">
+                <i class="fas fa-hand-holding-usd" style="font-size: 3.5rem; color: var(--dark-green);"></i>
+                <h3 style="color: var(--dark-green); font-size:2rem;">Partner with us</h3>
+                <p style="font-size:1.3rem;">hello@uniquefoodfest.ng  ·  +234 907 777 1234</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FEEDBACK ========== -->
+    <section class="section" style="background: #cfe2cf;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1200"><span>they trust us</span>Client & team feedback</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 2rem; justify-content: center;">
+            <div class="feedback-card" style="background: var(--dark-green); padding: 2rem; border-radius: 50px 0; color: white; max-width: 320px; border-left: 15px solid var(--light-green);" data-aos="fade-right" data-aos-delay="50"><i class="fas fa-quote-right" style="color: var(--yellow); font-size: 2.5rem;"></i><p style="font-size: 1.3rem;">"This festival amplifies smallholder farmers. The energy is unmatched!"</p><h4>— Efe O.</h4></div>
+            <div class="feedback-card" style="background: var(--dark-green); padding: 2rem; border-radius: 50px 0; color: white; max-width: 320px; border-left: 15px solid var(--light-green);" data-aos="fade-up" data-aos-delay="100"><i class="fas fa-quote-right" style="color: var(--yellow); font-size: 2.5rem;"></i><p style="font-size: 1.3rem;">"My students loved the cooking quiz. No fees, just passion for local food."</p><h4>— Dr. Nkem</h4></div>
+            <div class="feedback-card" style="background: var(--dark-green); padding: 2rem; border-radius: 50px 0; color: white; max-width: 320px; border-left: 15px solid var(--light-green);" data-aos="fade-left" data-aos-delay="150"><i class="fas fa-quote-right" style="color: var(--yellow); font-size: 2.5rem;"></i><p style="font-size: 1.3rem;">"Finally a platform that celebrates ofada rice and indigenous spices!"</p><h4>— Chef Tunde</h4></div>
+        </div>
+    </section>
+
+    <!-- ========== LOCATION + MAP + SOCIAL ========== -->
+    <section class="section" style="background: #fdfde9;">
+        <div class="section-title" data-aos="fade-up" data-aos-duration="1300"><span>visit us</span>Adeyemi Bero, Alausa Ikeja</div>
+        <div class="direction-card" data-aos="flip-left" data-aos-delay="100" data-aos-duration="1400">
+            <i class="fas fa-car" style="font-size: 3rem; color: var(--yellow); margin-bottom: 0.8rem;"></i>
+            <h3 style="font-size: 2rem; color: var(--yellow);">How to get there (by car)</h3>
+            <p style="font-size: 1.3rem; margin-top: 0.8rem;">📍 From Lagos mainland: take Ikorodu Road → connect to Mobolaji Bank-Anthony Way → turn at Kudirat Abiola Way → Adeyemi Bero Road. Auditorium is opposite Alausa Secretariat. Free parking on site.</p>
+        </div>
+        <div id="map" data-aos="zoom-in" data-aos-delay="200" data-aos-duration="1500"></div>
+        <div style="margin-top: 2.8rem; text-align: center;" data-aos="fade-up" data-aos-delay="250">
+            <h3 style="font-size: 2.2rem; color: var(--dark-green); margin-bottom: 1rem;">#UniqueFoodFest</h3>
+            <div class="social-links">
+                <a href="#" class="social-icon" data-aos="zoom-in" data-aos-delay="50"><i class="fab fa-instagram"></i></a>
+                <a href="#" class="social-icon" data-aos="zoom-in" data-aos-delay="100"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-icon" data-aos="zoom-in" data-aos-delay="150"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="social-icon" data-aos="zoom-in" data-aos-delay="200"><i class="fab fa-youtube"></i></a>
+                <a href="#" class="social-icon" data-aos="zoom-in" data-aos-delay="250"><i class="fab fa-tiktok"></i></a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ========== FOOTER ========== -->
+    <footer class="footer">
+        <p style="font-size: 1.8rem; font-weight: 700;"><i class="fas fa-seedling"></i> Unique Food Festival · Green Revolution</p>
+        <p style="margin: 1.2rem 0;">© 2025 Championing Nigeria's agricultural value chain. All entries free.</p>
+        <p><i class="fas fa-map-pin"></i> Adeyemi Bero Auditorium, Alausa Ikeja, Lagos</p>
+    </footer>
+
+    <!-- ========== GALLERY PAGE (hidden) ========== -->
+    <div id="fullGalleryPage" class="gallery-page">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h2 style="font-size: 3rem; color: var(--dark-green);"><i class="fas fa-leaf"></i> Full gallery</h2>
+            <button id="backHomeBtn" style="background: var(--dark-green); color: white; border: none; padding: 0.8rem 2rem; border-radius: 60px; font-weight: bold; font-size: 1.2rem; cursor: pointer;"><i class="fas fa-arrow-left"></i> back</button>
+        </div>
+        <div class="full-gallery-grid">
+            <div class="gallery-item"><img src="https://images.unsplash.com/photo-1589301762554-ba7e7b07c89d?q=80&w=2070&auto=format&fit=crop" alt="Nigerian stew"></div>
+            <div class="gallery-item"><img src="https://images.unsplash.com/photo-1631452180519-c014fe946bc7?q=80&w=1974&auto=format&fit=crop" alt="pepper soup"></div>
+            <div class="gallery-item"><img src="https://images.unsplash.com/photo-1633436376209-518e7f6bc1b1?q=80&w=1974&auto=format&fit=crop" alt="yam and egg"></div>
+            <div class="gallery-item"><img src="https://images.unsplash.com/photo-1598520106830-8c45c2035460?q=80&w=1974&auto=format&fit=crop" alt="banga soup"></div>
+            <div class="gallery-item"><img src="https://images.unsplash.com/photo-1606491956689-2ea866880c84?q=80&w=1974&auto=format&fit=crop" alt="jollof rice"></div>
+            <div class="gallery-item"><img src="https://images.unsplash.com/photo-1667502745706-7475ed3c77f2?q=80&w=2070&auto=format&fit=crop" alt="vegetable"></div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize AOS with more effects
+        AOS.init({
+            duration: 1200,
+            once: false,
+            mirror: true,
+            offset: 120,
+            easing: 'ease-out-cubic',
+            delay: 50
+        });
+
+        // Navbar hamburger toggle
+        const hamburger = document.getElementById('hamburgerBtn');
+        const navLinks = document.getElementById('navLinks');
+
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Close menu when link clicked (mobile)
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+
+        // Map
+        const map = L.map('map').setView([6.6018, 3.3515], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+        L.marker([6.6018, 3.3515]).addTo(map).bindPopup('<b>Adeyemi Bero Auditorium</b><br>Alausa, Ikeja').openPopup();
+
+        // Form & WhatsApp
+        const form = document.getElementById('festivalForm');
+        const whatsappDiv = document.getElementById('whatsappBlock');
+        const whatsappLink = document.getElementById('whatsappLink');
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value.trim();
+            const phone = document.getElementById('phone').value.trim();
+            if (name && phone) {
+                whatsappDiv.style.display = 'block';
+                whatsappLink.href = 'https://chat.whatsapp.com/example-greenharvest2025';
+                alert(`✅ ${name}, check below to join WhatsApp group.`);
+            } else {
+                alert('Please fill name and phone');
+            }
+        });
+
+        // Gallery toggle
+        const viewMoreBtn = document.getElementById('viewMoreBtn');
+        const fullGallery = document.getElementById('fullGalleryPage');
+        const backBtn = document.getElementById('backHomeBtn');
+        viewMoreBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.querySelectorAll('body > *:not(.gallery-page):not(nav):not(footer)').forEach(el => el.style.display = 'none');
+            document.querySelector('footer').style.display = 'none';
+            fullGallery.style.display = 'block';
+        });
+        backBtn.addEventListener('click', function() {
+            document.querySelectorAll('body > *:not(.gallery-page):not(nav):not(footer)').forEach(el => el.style.display = 'block');
+            document.querySelector('footer').style.display = 'block';
+            fullGallery.style.display = 'none';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+    <style> #fullGalleryPage { display: none; } .whatsapp-link { display: none; } </style>
+</body>
+</html>
